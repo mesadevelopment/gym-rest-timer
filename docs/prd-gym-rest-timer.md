@@ -192,11 +192,15 @@ Use:
 - Complication launcher  
 
 ### Version 1.1
-- Custom durations  
+- Custom durations
 - Pause/resume  
 - Loop mode  
 
 ### Version 1.2
-- iPhone companion app  
-- Workout tracking  
+- iPhone companion app
+- Set a session countdown with workout and rest timer
+- Track heart rate during out workout and during rest 
 - Themes  
+
+### Version 2.0
+- Online portal to track sessions
