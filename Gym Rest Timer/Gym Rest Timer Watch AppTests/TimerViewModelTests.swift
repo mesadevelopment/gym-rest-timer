@@ -15,14 +15,17 @@ class MockHapticManager: HapticManagerProtocol {
     var urgentHapticCallCount = 0
     var completionHapticCallCount = 0
     
+    @MainActor
     func playWarningHaptic() {
         warningHapticCallCount += 1
     }
     
+    @MainActor
     func playUrgentHaptic() {
         urgentHapticCallCount += 1
     }
     
+    @MainActor
     func playCompletionHaptic() {
         completionHapticCallCount += 1
     }

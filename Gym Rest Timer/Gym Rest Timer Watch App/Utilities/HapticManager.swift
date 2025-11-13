@@ -9,28 +9,31 @@ import WatchKit
 
 /// Protocol for haptic feedback management (enables testing)
 protocol HapticManagerProtocol {
-    func playWarningHaptic()
-    func playUrgentHaptic()
-    func playCompletionHaptic()
+    @MainActor func playWarningHaptic()
+    @MainActor func playUrgentHaptic()
+    @MainActor func playCompletionHaptic()
 }
 
 /// Manages haptic feedback for timer alerts
 class HapticManager: HapticManagerProtocol {
-    static let shared = HapticManager()
+    nonisolated static let shared = HapticManager()
     
     private init() {}
     
     /// Play subtle haptic at 10 seconds remaining
+    @MainActor
     func playWarningHaptic() {
         WKInterfaceDevice.current().play(.notification)
     }
     
     /// Play stronger haptic at 5 seconds remaining
+    @MainActor
     func playUrgentHaptic() {
         WKInterfaceDevice.current().play(.retry)
     }
     
     /// Play completion haptic when timer ends
+    @MainActor
     func playCompletionHaptic() {
         WKInterfaceDevice.current().play(.success)
     }
