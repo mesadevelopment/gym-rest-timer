@@ -14,6 +14,15 @@ Tapping during countdown cancels and returns to ready screen.
 - SwiftUI for all UI components.
 - MVVM-style with a clean state machine for timer logic.
 
+## Timer Implementation Rules
+- Avoid using `Timer.scheduledTimer` for countdown logic.
+- Implement countdown using modern Swift concurrency:
+  - A `Task` with `Task.sleep(for: .seconds(1))` for precise ticking.
+  - Update state on the MainActor after each tick.
+- Keep all timer logic centralized inside the ViewModel/StateMachine.
+- Ensure the timer cancels cleanly if the user taps during countdown.
+- Do not use WKWorkoutSession unless we later expand the app into a full workout tracker.
+
 ## Required Flow
 1. Rest Selection Screen  
 2. Ready Screen (show selected time + tap to start)  

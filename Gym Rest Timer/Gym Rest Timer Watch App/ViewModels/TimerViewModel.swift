@@ -14,7 +14,7 @@ import WatchKit
 class TimerViewModel: ObservableObject {
     @Published var state: TimerState = .idle(selectedDuration: nil)
     
-    private var timer: Timer?
+    private var countdownTask: Task<Void, Never>?
     private let hapticManager: HapticManagerProtocol
     
     /// Initialize with optional haptic manager (for testing)
@@ -59,23 +59,114 @@ class TimerViewModel: ObservableObject {
     func startCountdown() {
         guard case .ready(let duration) = state else { return }
         
+        // Cancel any existing countdown task
+        countdownTask?.cancel()
+        
         storedDuration = duration
         state = .countingDown(remainingSeconds: duration.rawValue)
         
-        // Start timer using Timer API for precise countdown
-        timer?.invalidate()
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            Task { @MainActor in
-                self?.tick()
-            }
+        // Start async countdown task
+        countdownTask = Task { @MainActor [weak self] in
+            await self?.runCountdown()
         }
-        
-        // Add timer to RunLoop to keep it active
-        RunLoop.current.add(timer!, forMode: .common)
     }
     
-    /// Handle each second tick during countdown
-    private func tick() {
+    /// Async countdown loop using Task.sleep
+    private func runCountdown() async {
+        var currentSeconds: Int
+        
+        // Get initial seconds from state
+        guard case .countingDown(let seconds) = state else { return }
+        currentSeconds = seconds
+        
+        // Countdown loop
+        while currentSeconds > 0 {
+            // Sleep for 1 second
+            try? await Task.sleep(for: .seconds(1))
+            
+            // Check if task was cancelled
+            if Task.isCancelled {
+                return
+            }
+            
+            // Check if we're still in countingDown state (user might have reset)
+            guard case .countingDown = state else {
+                return
+            }
+            
+            // Decrement seconds
+            currentSeconds -= 1
+            
+            // Trigger haptics at thresholds (flash animation is handled by the view)
+            if currentSeconds == 10 {
+                hapticManager.playWarningHaptic()
+            } else if currentSeconds == 5 {
+                hapticManager.playUrgentHaptic()
+            } else if currentSeconds == 0 {
+                hapticManager.playCompletionHaptic()
+                finishCountdown()
+                return
+            }
+            
+            // Update state
+            state = .countingDown(remainingSeconds: currentSeconds)
+        }
+    }
+    
+    /// Reset timer back to ready state (called when user taps during countdown)
+    func resetToReady() {
+        // Cancel the countdown task
+        countdownTask?.cancel()
+        countdownTask = nil
+        
+        guard let duration = storedDuration else {
+            state = .idle(selectedDuration: nil)
+            return
+        }
+        
+        state = .ready(selectedDuration: duration)
+    }
+    
+    /// Finish countdown and transition to finished state, then auto-reset to ready
+    private func finishCountdown() {
+        // Cancel the countdown task
+        countdownTask?.cancel()
+        countdownTask = nil
+        
+        guard storedDuration != nil else {
+            state = .idle(selectedDuration: nil)
+            return
+        }
+        
+        // Transition to finished state briefly, then auto-reset to ready
+        state = .finished
+        
+        // Auto-reset to ready state after a brief moment
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(0.5))
+            guard let self = self, let duration = self.storedDuration else { return }
+            self.state = .ready(selectedDuration: duration)
+        }
+    }
+    
+    /// Cancel timer and return to selection screen
+    func cancel() {
+        // Cancel the countdown task
+        countdownTask?.cancel()
+        countdownTask = nil
+        
+        // Preserve the last selected duration in idle state
+        let lastDuration = storedDuration
+        state = .idle(selectedDuration: lastDuration)
+    }
+    
+    deinit {
+        countdownTask?.cancel()
+    }
+    
+    #if DEBUG
+    /// Test helper: Manually advance countdown by one second (only available in debug builds for testing)
+    func testTick() {
         guard case .countingDown(let currentSeconds) = state else { return }
         
         let newSeconds = currentSeconds - 1
@@ -92,61 +183,6 @@ class TimerViewModel: ObservableObject {
         }
         
         state = .countingDown(remainingSeconds: newSeconds)
-    }
-    
-    /// Reset timer back to ready state (called when user taps during countdown)
-    func resetToReady() {
-        timer?.invalidate()
-        timer = nil
-        
-        guard let duration = storedDuration else {
-            state = .idle(selectedDuration: nil)
-            return
-        }
-        
-        state = .ready(selectedDuration: duration)
-    }
-    
-    /// Finish countdown and transition to finished state, then auto-reset to ready
-    private func finishCountdown() {
-        timer?.invalidate()
-        timer = nil
-        
-        guard storedDuration != nil else {
-            state = .idle(selectedDuration: nil)
-            return
-        }
-        
-        // Transition to finished state briefly, then auto-reset to ready
-        state = .finished
-        
-        // Auto-reset to ready state after a brief moment
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            Task { @MainActor in
-                guard let self = self, let duration = self.storedDuration else { return }
-                self.state = .ready(selectedDuration: duration)
-            }
-        }
-    }
-    
-    /// Cancel timer and return to selection screen
-    func cancel() {
-        timer?.invalidate()
-        timer = nil
-        
-        // Preserve the last selected duration in idle state
-        let lastDuration = storedDuration
-        state = .idle(selectedDuration: lastDuration)
-    }
-    
-    deinit {
-        timer?.invalidate()
-    }
-    
-    #if DEBUG
-    /// Test helper: Manually trigger a tick (only available in debug builds for testing)
-    func testTick() {
-        tick()
     }
     #endif
 }
