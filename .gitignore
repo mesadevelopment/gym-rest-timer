@@ -1,0 +1,86 @@
+# Xcode
+#
+build/
+DerivedData/
+*.xcworkspace/xcuserdata/
+*.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings
+*.xcworkspace/xcuserdata
+*.xcuserstate
+*.xcodeproj/project.xcworkspace
+*.xcodeproj/xcuserdata
+*.xcodeproj/xcshareddata/WorkspaceSettings.xcsettings
+*.moved-aside
+*.xcuserdatad
+*.xcscmblueprint
+
+# Swift Package Manager
+#
+.swiftpm/
+.build/
+
+# CocoaPods
+Pods/
+Podfile.lock
+podfile.lock
+project.xcworkspace
+
+# Carthage
+Carthage/
+Carthage/Build/
+
+# Accio dependency manager
+Dependencies/
+.accio/
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+fastlane/README.md
+
+# SwiftLint
+.swiftlint.yml
+
+# SwiftFormat
+.swiftformat
+
+# Archives
+*.xcarchive
+
+# Provisioning & Signing
+*.mobileprovision
+*.provisionprofile
+*.signing
+*.cer
+*.p12
+*.der
+
+# Logs
+*.log
+*.gz
+*.ideplugin
+*.crash
+*.xccrashpoint
+*.xccrashlog
+
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# Simulator
+*.simstate
+
+# Misc
+*.DS_Store
+*.swp
+*.swm
+*.swo
+*.swp
+*.lock
+
+# User settings
+*.pbxuser
+*.mode1v3
+*.mode2v3
+.idea/
