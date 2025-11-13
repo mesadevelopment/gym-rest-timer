@@ -7,8 +7,15 @@
 
 import WatchKit
 
+/// Protocol for haptic feedback management (enables testing)
+protocol HapticManagerProtocol {
+    func playWarningHaptic()
+    func playUrgentHaptic()
+    func playCompletionHaptic()
+}
+
 /// Manages haptic feedback for timer alerts
-class HapticManager {
+class HapticManager: HapticManagerProtocol {
     static let shared = HapticManager()
     
     private init() {}

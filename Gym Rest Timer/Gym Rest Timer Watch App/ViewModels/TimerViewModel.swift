@@ -15,7 +15,12 @@ class TimerViewModel: ObservableObject {
     @Published var state: TimerState = .idle(selectedDuration: nil)
     
     private var timer: Timer?
-    private let hapticManager = HapticManager.shared
+    private let hapticManager: HapticManagerProtocol
+    
+    /// Initialize with optional haptic manager (for testing)
+    init(hapticManager: HapticManagerProtocol = HapticManager.shared) {
+        self.hapticManager = hapticManager
+    }
     
     /// Computed property to get remaining seconds from state
     var remainingSeconds: Int {
@@ -137,5 +142,12 @@ class TimerViewModel: ObservableObject {
     deinit {
         timer?.invalidate()
     }
+    
+    #if DEBUG
+    /// Test helper: Manually trigger a tick (only available in debug builds for testing)
+    func testTick() {
+        tick()
+    }
+    #endif
 }
 
