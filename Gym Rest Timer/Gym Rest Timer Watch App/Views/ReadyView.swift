@@ -9,7 +9,9 @@ import SwiftUI
 
 /// Screen 2: Ready screen showing selected time, tap to start
 struct ReadyView: View {
+    /// View model that manages timer state
     @ObservedObject var viewModel: TimerViewModel
+    /// The selected timer duration to display
     let duration: TimerDuration
     
     var body: some View {

@@ -5,14 +5,18 @@
 //  Created by Lester Mesa on 11/13/25.
 //
 
-import Foundation
-
 /// Result of a tick operation, indicating what side effects should occur
+/// This allows the state machine to remain pure while the ViewModel handles side effects
 struct TickResult {
+    /// The new state after the tick
     let newState: TimerState
+    /// Whether to play warning haptic (at 10 seconds remaining)
     let shouldPlayWarningHaptic: Bool
+    /// Whether to play urgent haptic (at 5 seconds remaining)
     let shouldPlayUrgentHaptic: Bool
+    /// Whether to play completion haptic (at 0 seconds)
     let shouldPlayCompletionHaptic: Bool
+    /// Whether the countdown has finished and should transition to finished state
     let shouldFinish: Bool
 }
 

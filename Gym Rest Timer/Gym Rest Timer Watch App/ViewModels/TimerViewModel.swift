@@ -5,16 +5,19 @@
 //  Created by Lester Mesa on 11/13/25.
 //
 
-import Foundation
 import Combine
 
 /// Manages timer state and countdown logic, coordinating with RestTimerStateMachine
 @MainActor
 class TimerViewModel: ObservableObject {
+    /// Published state that drives the UI
     @Published var state: TimerState = .idle(selectedDuration: nil)
 
+    /// Pure state machine that manages timer logic without side effects
     private var stateMachine: RestTimerStateMachine
+    /// Async task that runs the countdown loop
     private var countdownTask: Task<Void, Never>?
+    /// Haptic feedback manager (injectable for testing)
     private let hapticManager: HapticManagerProtocol
 
     /// Initialize with optional haptic manager (for testing)

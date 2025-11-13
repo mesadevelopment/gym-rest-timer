@@ -5,13 +5,18 @@
 //  Created by Lester Mesa on 11/13/25.
 //
 
+import Foundation
 import SwiftUI
 
 /// Screen 3: Active countdown with visual and haptic alerts
+/// Displays remaining seconds with color transitions (orange at 10s, red at 5s) and flash animation
 struct CountdownView: View {
+    /// View model that manages timer state and countdown
     @ObservedObject var viewModel: TimerViewModel
     
+    /// Tracks whether the flash animation is currently active
     @State private var isFlashing = false
+    /// Timer that controls the flash animation (2x per second)
     @State private var flashTimer: Timer?
     
     var body: some View {

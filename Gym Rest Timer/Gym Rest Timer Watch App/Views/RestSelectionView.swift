@@ -27,8 +27,11 @@ struct RestSelectionView: View {
 }
 
 /// Large, tappable button for rest duration selection
+/// Provides a gym-friendly tap target with high contrast styling
 struct RestButton: View {
+    /// The timer duration this button represents
     let duration: TimerDuration
+    /// Action to perform when button is tapped
     let action: () -> Void
     
     var body: some View {
