@@ -6,7 +6,6 @@
 //
 
 import XCTest
-import Combine
 @testable import Gym_Rest_Timer_Watch_App
 
 /// Mock haptic manager for testing
@@ -14,22 +13,22 @@ class MockHapticManager: HapticManagerProtocol {
     var warningHapticCallCount = 0
     var urgentHapticCallCount = 0
     var completionHapticCallCount = 0
-    
+
     @MainActor
     func playWarningHaptic() {
         warningHapticCallCount += 1
     }
-    
+
     @MainActor
     func playUrgentHaptic() {
         urgentHapticCallCount += 1
     }
-    
+
     @MainActor
     func playCompletionHaptic() {
         completionHapticCallCount += 1
     }
-    
+
     func reset() {
         warningHapticCallCount = 0
         urgentHapticCallCount = 0
@@ -41,19 +40,16 @@ class MockHapticManager: HapticManagerProtocol {
 final class TimerViewModelTests: XCTestCase {
     var viewModel: TimerViewModel!
     var mockHapticManager: MockHapticManager!
-    var cancellables: Set<AnyCancellable>!
-    
+
     override func setUp() {
         super.setUp()
         mockHapticManager = MockHapticManager()
         viewModel = TimerViewModel(hapticManager: mockHapticManager)
-        cancellables = Set<AnyCancellable>()
     }
-    
+
     override func tearDown() {
         viewModel = nil
         mockHapticManager = nil
-        cancellables = nil
         super.tearDown()
     }
     

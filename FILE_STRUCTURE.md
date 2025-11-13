@@ -21,7 +21,8 @@ Gym Rest Timer Watch App/
 │   └── TimerViewModel.swift               # Timer state machine and countdown logic
 │
 ├── Models/
-│   └── TimerModels.swift                  # TimerDuration enum, TimerState enum
+│   ├── TimerModels.swift                  # TimerDuration enum, TimerState enum
+│   └── RestTimerStateMachine.swift        # Pure state machine logic (no side effects)
 │
 ├── Utilities/
 │   ├── HapticManager.swift                # Haptic feedback management
@@ -39,9 +40,10 @@ Gym Rest Timer Watch App/
 - **CountdownView**: Displays active countdown with color transitions (orange at 10s, red at 5s) and haptic alerts
 
 ### ViewModels
-- **TimerViewModel**: Manages timer state machine (`idle`, `ready`, `countingDown`, `finished`), handles countdown logic, and coordinates haptic feedback
+- **TimerViewModel**: Coordinates between RestTimerStateMachine, async countdown tasks, and haptic feedback. Publishes state changes for SwiftUI views.
 
 ### Models
+- **RestTimerStateMachine**: Pure state machine managing timer logic and state transitions without side effects. Returns results indicating required haptic actions.
 - **TimerDuration**: Enum representing preset durations (30, 60, 90, 120 seconds)
 - **TimerState**: Enum representing current timer state with associated values
 

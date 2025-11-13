@@ -19,14 +19,17 @@ Note: This project requires Xcode (not just Command Line Tools) to build and run
 ### Testing
 - Run tests through Xcode: Product → Test (⌘U)
 - Tests are located in `Gym Rest Timer Watch AppTests/`
-- Main test file: `TimerViewModelTests.swift` (comprehensive unit tests for timer state machine)
+- Test files:
+  - `TimerViewModelTests.swift` - ViewModel integration tests with haptic coordination
+  - `RestTimerStateMachineTests.swift` - Pure state machine logic tests (no side effects)
 
 ## Architecture
 
 ### MVVM Pattern with State Machine
 The app follows MVVM architecture with a centralized state machine pattern:
 
-- **State Machine**: `TimerViewModel` manages all timer states: `idle`, `ready`, `countingDown`, `finished`
+- **State Machine**: `RestTimerStateMachine` (pure logic) manages timer states: `idle`, `ready`, `countingDown`, `finished`
+- **ViewModel**: `TimerViewModel` coordinates state machine, async tasks, and haptic feedback
 - **Views**: Lightweight SwiftUI views that react to state changes
 - **Navigation**: State-based navigation in `ContentView` switches between views based on `TimerViewModel.state`
 
@@ -48,9 +51,10 @@ Gym Rest Timer Watch App/
 │   ├── ReadyView.swift               # Ready screen (tap to start)
 │   └── CountdownView.swift           # Active countdown with alerts
 ├── ViewModels/
-│   └── TimerViewModel.swift          # Timer state machine & logic
+│   └── TimerViewModel.swift          # Coordinates state machine, async tasks, haptics
 ├── Models/
-│   └── TimerModels.swift             # TimerDuration & TimerState enums
+│   ├── TimerModels.swift             # TimerDuration & TimerState enums
+│   └── RestTimerStateMachine.swift   # Pure state machine logic (no side effects)
 └── Utilities/
     ├── HapticManager.swift           # Haptic feedback (protocol-based for testing)
     └── ColorManager.swift            # Color transitions (orange @10s, red @5s)
@@ -78,7 +82,8 @@ Gym Rest Timer Watch App/
 - Flash rate: 2x per second (0.5s interval)
 
 ### Testing
-- `TimerViewModel` includes `testTick()` method (debug-only) for controlled testing
+- `RestTimerStateMachine` can be tested in isolation (pure logic, no side effects)
+- `TimerViewModel` includes `testTick()` method (debug-only) for controlled integration testing
 - `MockHapticManager` for unit tests (no actual haptic playback)
 - Tests verify: state transitions, haptic timing, countdown accuracy, cancellation behavior
 
@@ -96,7 +101,9 @@ The `docs/` directory contains:
 - `design-specs-gym-rest-timer.md` - Design specifications
 - `ai-rules.md` - Development guidelines (timer implementation, architecture rules)
 
-FILE_STRUCTURE.md provides detailed component responsibilities and state flow diagram.
+Root documentation:
+- `FILE_STRUCTURE.md` - Detailed component responsibilities and state flow diagram
+- `STATE_MACHINE.md` - Complete state machine documentation (states, transitions, events, rules)
 
 ## Future Roadmap
 

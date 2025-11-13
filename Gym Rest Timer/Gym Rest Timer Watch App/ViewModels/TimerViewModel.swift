@@ -7,7 +7,6 @@
 
 import Foundation
 import Combine
-import WatchKit
 
 /// Manages timer state and countdown logic, coordinating with RestTimerStateMachine
 @MainActor
