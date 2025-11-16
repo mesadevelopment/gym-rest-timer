@@ -7,10 +7,11 @@
 
 import Combine
 import WatchKit
+import HealthKit
 
 /// Manages timer state and countdown logic, coordinating with RestTimerStateMachine
 @MainActor
-class TimerViewModel: ObservableObject {
+class TimerViewModel: ObservableObject, HKWorkoutSessionDelegate {
     /// Published state that drives the UI
     @Published var state: TimerState = .idle(selectedDuration: nil)
 
@@ -20,6 +21,11 @@ class TimerViewModel: ObservableObject {
     private var countdownTask: Task<Void, Never>?
     /// Haptic feedback manager (injectable for testing)
     private let hapticManager: HapticManagerProtocol
+    /// Workout session to keep app active during countdown (prevents suspension when screen is off)
+    private var workoutSession: HKWorkoutSession?
+    private var workoutConfiguration: HKWorkoutConfiguration?
+    /// HealthKit store for workout session management
+    private let healthStore = HKHealthStore()
 
     /// Initialize with optional haptic manager (for testing)
     init(hapticManager: HapticManagerProtocol = HapticManager.shared) {
@@ -52,6 +58,10 @@ class TimerViewModel: ObservableObject {
 
         // Update published state
         state = stateMachine.state
+
+        // Start workout session to keep app active during countdown
+        // This prevents the app from being suspended when the screen turns off
+        startWorkoutSession()
 
         // Start async countdown task with high priority to prevent suspension
         // This ensures the timer continues even when the watch screen is off
@@ -110,6 +120,9 @@ class TimerViewModel: ObservableObject {
         countdownTask?.cancel()
         countdownTask = nil
 
+        // Stop workout session
+        stopWorkoutSession()
+
         // Delegate to state machine
         stateMachine.resetToReady()
         state = stateMachine.state
@@ -120,6 +133,9 @@ class TimerViewModel: ObservableObject {
         // Cancel the countdown task
         countdownTask?.cancel()
         countdownTask = nil
+
+        // Stop workout session
+        stopWorkoutSession()
 
         // Delegate to state machine
         stateMachine.finish()
@@ -140,13 +156,103 @@ class TimerViewModel: ObservableObject {
         countdownTask?.cancel()
         countdownTask = nil
 
+        // Stop workout session
+        stopWorkoutSession()
+
         // Delegate to state machine
         stateMachine.cancel()
         state = stateMachine.state
     }
 
+    // MARK: - Workout Session Management
+    
+    /// Start a workout session to keep the app active during countdown
+    /// This prevents the app from being suspended when the screen turns off
+    private func startWorkoutSession() {
+        // Check if HealthKit is available
+        guard HKHealthStore.isHealthDataAvailable() else {
+            // If HealthKit is not available, continue without workout session
+            // The timer will still work, but may pause when screen is off
+            return
+        }
+
+        // Stop any existing session
+        stopWorkoutSession()
+
+        // Request HealthKit authorization (required for workout sessions)
+        // We request minimal permissions - just workout data write
+        let workoutType = HKObjectType.workoutType()
+        healthStore.requestAuthorization(toShare: [workoutType], read: []) { [weak self] success, error in
+            guard let self = self, success else {
+                // If authorization fails, continue without workout session
+                // Timer will still work but may pause when screen is off
+                if let error = error {
+                    print("HealthKit authorization failed: \(error.localizedDescription)")
+                }
+                return
+            }
+
+            Task { @MainActor in
+                // Create a minimal workout configuration
+                // We use "Other" activity type to avoid tracking actual workout data
+                let configuration = HKWorkoutConfiguration()
+                configuration.activityType = .other
+                configuration.locationType = .indoor
+
+                // Create and start the workout session
+                do {
+                    let session = try HKWorkoutSession(healthStore: self.healthStore, configuration: configuration)
+                    session.delegate = self
+                    self.workoutSession = session
+                    self.workoutConfiguration = configuration
+                    
+                    // Start the session to keep app active
+                    self.healthStore.start(session)
+                } catch {
+                    // If session creation fails, continue without it
+                    // Timer will still work but may pause when screen is off
+                    print("Failed to start workout session: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    /// Stop the workout session
+    private func stopWorkoutSession() {
+        guard let session = workoutSession else { return }
+        
+        // End the session
+        healthStore.end(session)
+        workoutSession = nil
+        workoutConfiguration = nil
+    }
+    
+    // MARK: - HKWorkoutSessionDelegate
+    
+    /// Called when workout session state changes
+    /// Note: This may be called on a background thread
+    nonisolated func workoutSession(_ workoutSession: HKWorkoutSession, didChangeTo toState: HKWorkoutSessionState, from fromState: HKWorkoutSessionState, date: Date) {
+        // Handle workout session state changes if needed
+        // For our use case, we just need the session to keep the app active
+        // No UI updates needed, so we can handle this on any thread
+    }
+    
+    /// Called when workout session fails
+    /// Note: This may be called on a background thread
+    nonisolated func workoutSession(_ workoutSession: HKWorkoutSession, didFailWithError error: Error) {
+        // If workout session fails, continue without it
+        // Timer will still work but may pause when screen is off
+        print("Workout session failed: \(error.localizedDescription)")
+        
+        // Dispatch to main actor to stop the session safely
+        Task { @MainActor [weak self] in
+            self?.stopWorkoutSession()
+        }
+    }
+
     deinit {
         countdownTask?.cancel()
+        stopWorkoutSession()
     }
 
     #if DEBUG
