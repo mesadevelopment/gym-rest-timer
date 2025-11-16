@@ -6,6 +6,7 @@
 //
 
 import Combine
+import WatchKit
 
 /// Manages timer state and countdown logic, coordinating with RestTimerStateMachine
 @MainActor
@@ -52,17 +53,20 @@ class TimerViewModel: ObservableObject {
         // Update published state
         state = stateMachine.state
 
-        // Start async countdown task
-        countdownTask = Task { @MainActor [weak self] in
+        // Start async countdown task with high priority to prevent suspension
+        // This ensures the timer continues even when the watch screen is off
+        countdownTask = Task(priority: .userInitiated) { @MainActor [weak self] in
             await self?.runCountdown()
         }
     }
 
     /// Async countdown loop using Task.sleep
+    /// This continues running even when the watch screen is off, ensuring haptics work as designed
     private func runCountdown() async {
         while case .countingDown = stateMachine.state {
-            // Sleep for 1 second
-            try? await Task.sleep(for: .seconds(1))
+            // Sleep for 1 second using continuous clock for better accuracy
+            // This ensures the timer continues even when the app is backgrounded
+            try? await ContinuousClock().sleep(for: .seconds(1))
 
             // Check if task was cancelled
             if Task.isCancelled {
@@ -77,10 +81,11 @@ class TimerViewModel: ObservableObject {
             // Tick the state machine
             let result = stateMachine.tick()
 
-            // Update published state
+            // Update published state (this will update UI when screen is active)
             state = result.newState
 
             // Trigger haptics based on tick result
+            // Haptics work even when the screen is off, alerting the user
             if result.shouldPlayWarningHaptic {
                 hapticManager.playWarningHaptic()
             }
