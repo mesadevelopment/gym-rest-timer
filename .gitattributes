@@ -1,0 +1,15 @@
+# Git attributes for versioning
+# Ensure consistent line endings and file handling
+
+# Version file should always use LF line endings
+VERSION text eol=lf
+
+# Changelog should use LF line endings
+CHANGELOG.md text eol=lf
+
+# Shell scripts should use LF line endings
+*.sh text eol=lf
+
+# Mark shell scripts as executable
+*.sh text
+

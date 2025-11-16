@@ -2,6 +2,10 @@
 
 A simple, fast, and intuitive Apple Watch rest timer app designed for gym workouts. Built for zero‑friction usability so you can start your rest timer with a single tap between sets.
 
+**Current Version:** [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](VERSION)  
+**Platform:** watchOS 10.0+  
+**License:** See LICENSE file (if applicable)
+
 ## 📱 Overview
 
 The Gym Rest Timer app allows gym‑goers to quickly select a rest interval, start a countdown, and receive visual and haptic alerts as the timer approaches completion.
@@ -98,10 +102,34 @@ Four preset rest intervals:
 
 ## 🛠️ Technical Requirements
 
-* **watchOS:** 9.0+
+* **watchOS:** 10.0+
 * **Language:** Swift & SwiftUI
 * **Haptics:** Uses `WKInterfaceDevice.current().play()`
 * **Animation:** Uses SwiftUI color flash transitions
+
+---
+
+## 📦 Versioning
+
+This project follows [Semantic Versioning](https://semver.org/) (SemVer):
+
+- **Version Format:** `MAJOR.MINOR.PATCH` (e.g., `1.0.0`)
+- **Current Version:** See [VERSION](VERSION) file
+- **Changelog:** See [CHANGELOG.md](CHANGELOG.md)
+- **Versioning Guide:** See [docs/VERSIONING.md](docs/VERSIONING.md)
+
+### Quick Version Bump
+
+Use the provided script to bump versions:
+
+```bash
+./scripts/version-bump.sh [major|minor|patch] [message]
+```
+
+Example:
+```bash
+./scripts/version-bump.sh patch "Fix timer accuracy issue"
+```
 
 ---
 
