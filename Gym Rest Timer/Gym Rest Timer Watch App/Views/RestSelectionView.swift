@@ -12,17 +12,19 @@ struct RestSelectionView: View {
     @ObservedObject var viewModel: TimerViewModel
     
     var body: some View {
-        VStack(spacing: 16) {
-            ForEach(TimerDuration.allCases) { duration in
-                RestButton(
-                    duration: duration,
-                    action: {
-                        viewModel.selectDuration(duration)
-                    }
-                )
+        ScrollView {
+            VStack(spacing: 16) {
+                ForEach(TimerDuration.allCases) { duration in
+                    RestButton(
+                        duration: duration,
+                        action: {
+                            viewModel.selectDuration(duration)
+                        }
+                    )
+                }
             }
+            .padding()
         }
-        .padding()
     }
 }
 
