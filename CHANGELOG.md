@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2025-11-16
+
+### Added
+- TBD
+
+
+
 ### Added
 - Initial project setup with MVVM architecture
 - Timer state machine with states: idle, ready, countingDown, finished
