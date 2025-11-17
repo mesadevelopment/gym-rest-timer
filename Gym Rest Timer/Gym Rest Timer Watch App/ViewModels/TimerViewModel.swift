@@ -11,7 +11,7 @@ import HealthKit
 
 /// Manages timer state and countdown logic, coordinating with RestTimerStateMachine
 @MainActor
-class TimerViewModel: ObservableObject, HKWorkoutSessionDelegate {
+class TimerViewModel: NSObject, ObservableObject, HKWorkoutSessionDelegate {
     /// Published state that drives the UI
     @Published var state: TimerState = .idle(selectedDuration: nil)
 
@@ -31,6 +31,7 @@ class TimerViewModel: ObservableObject, HKWorkoutSessionDelegate {
     init(hapticManager: HapticManagerProtocol = HapticManager.shared) {
         self.hapticManager = hapticManager
         self.stateMachine = RestTimerStateMachine()
+        super.init()
     }
 
     /// Computed property to get remaining seconds from state machine
@@ -206,8 +207,8 @@ class TimerViewModel: ObservableObject, HKWorkoutSessionDelegate {
                     self.workoutSession = session
                     self.workoutConfiguration = configuration
                     
-                    // Start the session to keep app active
-                    self.healthStore.start(session)
+                    // Start the session to keep app active (using non-deprecated method)
+                    session.startActivity(with: Date())
                 } catch {
                     // If session creation fails, continue without it
                     // Timer will still work but may pause when screen is off
@@ -221,8 +222,8 @@ class TimerViewModel: ObservableObject, HKWorkoutSessionDelegate {
     private func stopWorkoutSession() {
         guard let session = workoutSession else { return }
         
-        // End the session
-        healthStore.end(session)
+        // End the session (using non-deprecated method)
+        session.end()
         workoutSession = nil
         workoutConfiguration = nil
     }
@@ -245,14 +246,23 @@ class TimerViewModel: ObservableObject, HKWorkoutSessionDelegate {
         print("Workout session failed: \(error.localizedDescription)")
         
         // Dispatch to main actor to stop the session safely
+        // We need to capture self strongly here since we're in a nonisolated context
         Task { @MainActor [weak self] in
-            self?.stopWorkoutSession()
+            guard let self = self else { return }
+            // Access the session directly to end it without needing MainActor isolation
+            self.workoutSession?.end()
+            self.workoutSession = nil
+            self.workoutConfiguration = nil
         }
     }
 
     deinit {
         countdownTask?.cancel()
-        stopWorkoutSession()
+        // Directly end the workout session in deinit (nonisolated context)
+        // We can safely access and end the session here since we're cleaning up
+        workoutSession?.end()
+        workoutSession = nil
+        workoutConfiguration = nil
     }
 
     #if DEBUG
